@@ -26,24 +26,35 @@ unsigned long last_time_2;
 #define TRIGGER_PIN  12     // D6 Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     13     // D7 Arduino pin tied to echo pin on the ultrasonic sensor.
 #define MAX_DISTANCE 450    // Maximum sensor distance is rated at 400-500cm.
-#define SEALEVELPRESSURE_HPA (1013.25) // 760мм.рт.ст. = 1013.25 гПа (hPa)
+//#define SEALEVELPRESSURE_HPA (1013.25) // 760мм.рт.ст. = 1013.25 гПа (hPa)
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 MedianFilter filter(31,0); // Filter OFF/ON
 
-char auth[] = "xxx";
-char ssid[] = "xxx";
-char pass[] = "xxx";
+char auth[] = "tQSG6TYMuj33_0OrdRxhvxIkmiNAxrbZ";
+char ssid[] = "";
+char pass[] = "";
 
 void setup() {
   Serial.begin(9600);
-  Blynk.begin(auth, ssid, pass, IPAddress(xxx,xxx,xxx,xxx), 8080);  // Запуск Blynk
+  Blynk.begin(auth, ssid, pass);  // Запуск Blynk
   Serial.println();
 
   Blynk.setProperty(V7, "label", "Глубина");
   Blynk.setProperty(V13, "label", "Уровень");
   Blynk.setProperty(V15, "label", "Объем");
 }
+
+void sendMeasure() {
+  
+  Serial.println("    До воды: " + String(measuring) + " см.");
+  Serial.println ();
+  Blynk.virtualWrite(V7, Depth);      // Глубина колодца
+  Blynk.virtualWrite(V13,level);      // Уровень воды
+  Blynk.virtualWrite(V15,capacity);   // Объем воды
+  Blynk.virtualWrite(V12,measuring);  // Измеренное расстояние
+}
+
 
 void loop() {
   Blynk.run();
@@ -52,6 +63,8 @@ void loop() {
     last_time_2 = millis();
 
     unsigned int oo,uS = sonar.ping(); // Send ping, get ping time in microseconds (uS). Filter ON //-OFF
+    Serial.println("    oo " + oo);
+    Serial.println("    uS " + uS); 
     filter.in(uS);
     oo = filter.out();
 
@@ -65,13 +78,4 @@ void loop() {
     last_time = millis();
     sendMeasure();
   }
-}
-
-void sendMeasure() {
-  Serial.println("    До воды: " + String(measuring) + " см.");
-  Serial.println ();
-  Blynk.virtualWrite(V7, Depth);      // Глубина колодца
-  Blynk.virtualWrite(V13,level);      // Уровень воды
-  Blynk.virtualWrite(V15,capacity);   // Объем воды
-  Blynk.virtualWrite(V12,measuring);  // Измеренное расстояние
 }
